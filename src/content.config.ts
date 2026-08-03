@@ -35,7 +35,7 @@ const aptPackages = defineCollection({
         .trim()
         .split("\n");
 
-      // Group rows by package name; only stable suites (no "-dev" suffix)
+      // Group rows by package name; only the "stable" channel (last field)
       const pkgMap = new Map<
         string,
         {
@@ -48,30 +48,35 @@ const aptPackages = defineCollection({
 
       for (const line of lines) {
         if (!line.trim()) continue;
-        // Get fields by splitting on tabs or spaces (handle both TSV and space-delimited)
-        const fields = line.split(" ");
+        const fields = line.split(/\s+/);
         const suite = fields[0];
         const arch = fields[1];
         const name = fields[2];
-        const version = fields[3];
+        const rawVersion = fields[3];
         const controlB64 = fields[9] ?? "";
+        const channel = fields[10];
 
-        // Skip malformed rows or dev suite rows
-        if (fields.length < 4 || !name || !suite) continue;
-        if (suite.endsWith("-dev")) continue;
+        // Skip malformed rows or non-stable channel rows
+        if (fields.length < 11 || !name || !suite) continue;
+        if (channel !== "stable") continue;
 
-        if (!pkgMap.has(name)) {
-          pkgMap.set(name, {
-            suites: new Set(),
-            architectures: new Set(),
-            version,
-            controlB64,
-          });
-        }
+        // Strip the "+SUITE" build suffix (e.g. "0.17.0-1+trixie" -> "0.17.0-1")
+        const version = rawVersion.endsWith(`+${suite}`)
+          ? rawVersion.slice(0, -(suite.length + 1))
+          : rawVersion;
 
-        const pkg = pkgMap.get(name)!;
+        // Rows are appended chronologically, so the last row for a given package is the latest version
+        const pkg = pkgMap.get(name) ?? {
+          suites: new Set<string>(),
+          architectures: new Set<string>(),
+          version,
+          controlB64,
+        };
+        pkg.version = version;
+        pkg.controlB64 = controlB64;
         pkg.suites.add(suite);
         pkg.architectures.add(arch);
+        pkgMap.set(name, pkg);
       }
 
       store.clear();
