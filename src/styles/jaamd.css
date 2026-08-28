@@ -1,9 +1,3 @@
-/* ─── jaamd markdown variables ───────────────────────────────────────────────
-   jaamd/styles/markdown.css uses --jaamd-* custom properties. None of these
-   have defaults inside the package, so they MUST all be defined here.
-   The integration auto-injects the stylesheet; no manual import is needed.
-   ─────────────────────────────────────────────────────────────────────────── */
-
 :root {
   /* Colors */
   --jaamd-color-fg: var(--color-foreground);

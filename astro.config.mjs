@@ -7,7 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 import react from "@astrojs/react";
 
-import jaamd from "jaamd";
+import jaamd from "@lancher-dev/jaamd";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
